@@ -42,6 +42,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               Text("BROWSE CATEGORIES", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
@@ -50,15 +51,17 @@ class _MyHomePageState extends State<MyHomePage> {
               SizedBox(height: 40),
               Text("BY MEAT", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               SizedBox(height: 20),
-              _buildImageRow(["beef.jpg", "chicken.jpg", "pork.jpg", "seafood.jpg"], ["BEEF", "CHICKEN", "PORK", "SEAFOOD"]),
+              _buildImageGrid(["beef.jpg", "chicken.jpg", "pork.jpg", "seafood.jpg"], ["BEEF", "CHICKEN", "PORK", "SEAFOOD"]),
               SizedBox(height: 40),
               Text("BY COURSE", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               SizedBox(height: 20),
-              _buildImageRow(["main_dishes.jpg", "salad.jpg", "side_dishes.jpg", "crockpot.jpg"], ["Main Dishes", "Salad Recipes", "Side Dishes", "Crockpot"], bottomText: true),
+              _buildImageGrid(["main_dishes.jpg", "salad.jpg", "side_dishes.jpg", "crockpot.jpg"],
+                  ["Main Dishes", "Salad Recipes", "Side Dishes", "Crockpot"], bottomText: true),
               SizedBox(height: 40),
               Text("BY DESSERT", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
               SizedBox(height: 20),
-              _buildImageRow(["ice_cream.jpg", "brownies.jpg", "pies.jpg", "cookies.jpg"], ["Ice Cream", "Brownies", "Pies", "Cookies"], bottomText: true),
+              _buildImageGrid(["ice_cream.jpg", "brownies.jpg", "pies.jpg", "cookies.jpg"],
+                  ["Ice Cream", "Brownies", "Pies", "Cookies"], bottomText: true),
             ],
           ),
         ),
@@ -66,40 +69,47 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  Widget _buildImageRow(List<String> images, List<String> texts, {bool bottomText = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        for (int i = 0; i < images.length; i++)
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: ClipOval(
-                child: Stack(
-                  alignment: bottomText ? Alignment.bottomCenter : Alignment.center,
-                  children: [
-                    Image.asset("images/${images[i]}", fit: BoxFit.cover),
-                    Container(
-                      width: double.infinity,
-                      color: bottomText ? Colors.black.withOpacity(0.5) : null,
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text(
-                        texts[i],
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: bottomText ? 14 : 16,
-                          shadows: [Shadow(color: Colors.black, blurRadius: 2)],
-                        ),
+  Widget _buildImageGrid(List<String> images, List<String> texts, {bool bottomText = false}) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        childAspectRatio: 1,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: images.length,
+      itemBuilder: (context, i) {
+        return ClipOval(
+          child: AspectRatio(
+            aspectRatio: 1,
+            child: Stack(
+              fit: StackFit.expand,
+              alignment: bottomText ? Alignment.bottomCenter : Alignment.center,
+              children: [
+                Image.asset("images/${images[i]}", fit: BoxFit.cover),
+                Container(
+                  color: bottomText ? Colors.black.withOpacity(0.5) : null,
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      texts[i],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        shadows: [Shadow(color: Colors.black, blurRadius: 2)],
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
-      ],
+        );
+      },
     );
   }
 }
