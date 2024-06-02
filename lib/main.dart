@@ -35,64 +35,71 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.lightGreen,
-        title: Text(widget.title),
+        backgroundColor: Colors.white,
+        title: Text(widget.title, style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
       ),
       body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Text("Delicious Recipes", style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold)),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text("Find your favorite recipes", style: TextStyle(fontSize: 20)),
-            ),
-            Text("By Meat", style: TextStyle(fontSize: 24)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(child: _buildImageStack("images/beef.jpg", "Beef")),
-                Expanded(child: _buildImageStack("images/chicken.jpg", "Chicken")),
-                Expanded(child: _buildImageStack("images/pork.jpg", "Pork")),
-                Expanded(child: _buildImageStack("images/seafood.jpg", "Seafood")),
-              ],
-            ),
-            Text("By Course", style: TextStyle(fontSize: 24)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(child: _buildImageStack("images/main_dishes.jpg", "Main Dishes", alignment: Alignment.bottomCenter)),
-                Expanded(child: _buildImageStack("images/salad.jpg", "Salad Recipes", alignment: Alignment.bottomCenter)),
-                Expanded(child: _buildImageStack("images/side_dishes.jpg", "Side Dishes", alignment: Alignment.bottomCenter)),
-                Expanded(child: _buildImageStack("images/crockpot.jpg", "Crockpot", alignment: Alignment.bottomCenter)),
-              ],
-            ),
-            Text("By Dessert", style: TextStyle(fontSize: 24)),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(child: _buildImageStack("images/cakes.jpg", "Cakes", alignment: Alignment.bottomCenter)),
-                Expanded(child: _buildImageStack("images/pies.jpg", "Pies", alignment: Alignment.bottomCenter)),
-                Expanded(child: _buildImageStack("images/cookies.jpg", "Cookies", alignment: Alignment.bottomCenter)),
-                Expanded(child: _buildImageStack("images/ice_cream.jpg", "Ice Cream", alignment: Alignment.bottomCenter)),
-              ],
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text("BROWSE CATEGORIES", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              SizedBox(height: 20),
+              Text("Not sure about exactly which recipe you're looking for? Do a search, or\ndive into our most popular categories.", style: TextStyle(fontSize: 16)),
+              SizedBox(height: 40),
+              Text("BY MEAT", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              SizedBox(height: 20),
+              _buildImageRow(["beef.jpg", "chicken.jpg", "pork.jpg", "seafood.jpg"], ["BEEF", "CHICKEN", "PORK", "SEAFOOD"]),
+              SizedBox(height: 40),
+              Text("BY COURSE", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              SizedBox(height: 20),
+              _buildImageRow(["main_dishes.jpg", "salad.jpg", "side_dishes.jpg", "crockpot.jpg"], ["Main Dishes", "Salad Recipes", "Side Dishes", "Crockpot"], bottomText: true),
+              SizedBox(height: 40),
+              Text("BY DESSERT", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+              SizedBox(height: 20),
+              _buildImageRow(["ice_cream.jpg", "brownies.jpg", "pies.jpg", "cookies.jpg"], ["Ice Cream", "Brownies", "Pies", "Cookies"], bottomText: true),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildImageStack(String imagePath, String text, {Alignment alignment = Alignment.center}) {
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
-      child: Stack(
-        alignment: alignment,
-        children: [
-          Image.asset(imagePath, fit: BoxFit.cover),
-          Text(text, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, shadows: [Shadow(color: Colors.black, blurRadius: 2)])),
-        ],
-      ),
+  Widget _buildImageRow(List<String> images, List<String> texts, {bool bottomText = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        for (int i = 0; i < images.length; i++)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: ClipOval(
+                child: Stack(
+                  alignment: bottomText ? Alignment.bottomCenter : Alignment.center,
+                  children: [
+                    Image.asset("images/${images[i]}", fit: BoxFit.cover),
+                    Container(
+                      width: double.infinity,
+                      color: bottomText ? Colors.black.withOpacity(0.5) : null,
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Text(
+                        texts[i],
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: bottomText ? 14 : 16,
+                          shadows: [Shadow(color: Colors.black, blurRadius: 2)],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
