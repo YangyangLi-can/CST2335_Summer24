@@ -86,12 +86,13 @@ class _MyHomePageState extends State<MyHomePage> {
             aspectRatio: 1,
             child: Stack(
               fit: StackFit.expand,
-              alignment: bottomText ? Alignment.bottomCenter : Alignment.center,
+              alignment: i < 4 ? Alignment.center : Alignment.bottomCenter,
               children: [
                 Image.asset("images/${images[i]}", fit: BoxFit.cover),
                 Container(
-                  color: bottomText ? Colors.black.withOpacity(0.5) : null,
+                  color: Colors.black.withOpacity(i < 4 ? 0.3 : 0.5),
                   padding: EdgeInsets.symmetric(vertical: 8),
+                  alignment: i < 4 ? Alignment.center : Alignment.bottomCenter,
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
