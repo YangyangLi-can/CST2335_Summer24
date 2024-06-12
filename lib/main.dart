@@ -1,6 +1,8 @@
+import 'package:cst2335_summer24/profilePage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +15,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Login Page',
-      home: const LoginPage(),
+      initialRoute:'/',
+      routes:{
+        '/': (context) => const LoginPage(),
+        '/profile': (context) => const ProfilePage(),
+      },
+      // home: const LoginPage(),
     );
   }
 }
@@ -88,6 +95,7 @@ class _LoginPageState extends State<LoginPage> {
                 await _secureStorage.delete(key: 'username');
                 await _secureStorage.delete(key: 'password');
                 Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/profile');
               },
               child: const Text('No'),
             ),
@@ -100,6 +108,7 @@ class _LoginPageState extends State<LoginPage> {
                 await _secureStorage.write(key: 'username', value: username);
                 await _secureStorage.write(key: 'password', value: password);
                 Navigator.of(context).pop();
+                Navigator.of(context).pushNamed('/profile', arguments: username);
               },
               child: const Text('Yes'),
             ),
