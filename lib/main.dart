@@ -1,113 +1,119 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const TodoApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class TodoApp extends StatelessWidget {
+  const TodoApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Todo List',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const TodoListPage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class TodoListPage extends StatefulWidget {
+  const TodoListPage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<TodoListPage> createState() => _TodoListPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  var isChecked = false;
-  late TextEditingController _controller; // late means initialize later, but not null
-  late TextEditingController _controller2;
-
-  @override
-  void initState() {
-    // initialize object, onloaded in HTML
-    super.initState();
-    _controller = TextEditingController();
-    _controller2 = TextEditingController();
-  }
-
-  @override
-  void dispose() { //unloading the page
-    super.dispose();
-    _controller.dispose(); //delete memory of _controller
-    _controller2.dispose();
-  }
-
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+class _TodoListPageState extends State<TodoListPage> {
+  final List<String> _todoItems = [];
+  final TextEditingController _textFieldController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-              style: TextStyle(fontSize:20.0),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _textFieldController,
+              decoration: const InputDecoration(
+                hintText: 'Enter a todo item',
+              ),
             ),
-
-            ElevatedButton(
-                onPressed: (){
-                  var myText = _controller.value.text;
-
-                  _controller.text = "You typed:"+ myText;
-                },
-                child:  Image.asset("images/algonquin.jpg", height:100.0, width:100.0)  ),
-            Checkbox(value: isChecked, onChanged:changeCheckbox),
-            Switch(value: isChecked, onChanged:changeCheckbox),
-            TextField( controller:_controller,
-            decoration:  InputDecoration(
-                hintText:"Type here",
-                border: OutlineInputBorder(),
-                labelText: "First name"
-            ),)
-          ],
-        ),
+          ),
+          Expanded(
+            child: _todoItems.isEmpty
+                ? const Center(
+              child: Text('There are no items in the list'),
+            )
+                : ListView.builder(
+              itemCount: _todoItems.length,
+              itemBuilder: (BuildContext context, int index) {
+                return ListTile(
+                  leading: Text('Row number: $index'),
+                  title: Text(_todoItems[index]),
+                  onLongPress: () {
+                    _showDeleteConfirmationDialog(context, index);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
+        onPressed: _addTodoItem,
+        tooltip: 'Add Todo',
         child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 
-void changeCheckbox(bool ? ch) {
-  if (ch != null) {
+  void _addTodoItem() {
     setState(() {
-      isChecked = ch;
+      _todoItems.add(_textFieldController.text);
+      _textFieldController.clear();
     });
   }
-}
-  void buttonClicked(){
 
+  void _deleteItem(int index) {
+    setState(() {
+      _todoItems.removeAt(index);
+    });
+  }
+
+  void _showDeleteConfirmationDialog(BuildContext context, int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Todo'),
+          content: const Text('Are you sure you want to delete this todo item?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                _deleteItem(index);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
