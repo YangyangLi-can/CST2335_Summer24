@@ -42,11 +42,22 @@ class _TodoListPageState extends State<TodoListPage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _textFieldController,
-              decoration: const InputDecoration(
-                hintText: 'Enter a todo item',
-              ),
+            child: Row(
+              children: [
+                ElevatedButton(
+                  onPressed: _addTodoItem,
+                  child: const Text('Add'),
+                ),
+                const SizedBox(width: 8.0),
+                Expanded(
+                  child: TextField(
+                    controller: _textFieldController,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter a todo item',
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -68,11 +79,6 @@ class _TodoListPageState extends State<TodoListPage> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _addTodoItem,
-        tooltip: 'Add Todo',
-        child: const Icon(Icons.add),
       ),
     );
   }
