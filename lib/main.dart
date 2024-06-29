@@ -1,11 +1,21 @@
+import 'package:cst2335_summer24/model.dart';
 import 'package:flutter/material.dart';
+import 'package:floor/floor.dart';
+import 'dart:async';
 
-void main() {
-  runApp(const TodoApp());
+// Import the generated database file
+import 'database.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final database = await $FloorAppDatabase.databaseBuilder('app_database.db').build();
+  runApp(TodoApp(database: database));
 }
 
 class TodoApp extends StatelessWidget {
-  const TodoApp({Key? key}) : super(key: key);
+  final AppDatabase database;
+
+  const TodoApp({Key? key, required this.database}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -14,23 +24,37 @@ class TodoApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const TodoListPage(title: 'Flutter Demo Home Page'),
+      home: TodoListPage(title: 'Flutter Demo Home Page', database: database),
     );
   }
 }
 
 class TodoListPage extends StatefulWidget {
-  const TodoListPage({Key? key, required this.title}) : super(key: key);
-
   final String title;
+  final AppDatabase database;
+
+  const TodoListPage({Key? key, required this.title, required this.database}) : super(key: key);
 
   @override
   State<TodoListPage> createState() => _TodoListPageState();
 }
 
 class _TodoListPageState extends State<TodoListPage> {
-  final List<String> _todoItems = [];
+  List<Todo> _todoItems = [];
   final TextEditingController _textFieldController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodos();
+  }
+
+  Future<void> _loadTodos() async {
+    final todos = await widget.database.todoDao.findAllTodos();
+    setState(() {
+      _todoItems = todos;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +94,7 @@ class _TodoListPageState extends State<TodoListPage> {
               itemBuilder: (BuildContext context, int index) {
                 return ListTile(
                   leading: Text('Row number: $index'),
-                  title: Text(_todoItems[index]),
+                  title: Text(_todoItems[index].content),
                   onLongPress: () {
                     _showDeleteConfirmationDialog(context, index);
                   },
@@ -83,17 +107,17 @@ class _TodoListPageState extends State<TodoListPage> {
     );
   }
 
-  void _addTodoItem() {
-    setState(() {
-      _todoItems.add(_textFieldController.text);
-      _textFieldController.clear();
-    });
+  Future<void> _addTodoItem() async {
+    final newTodo = Todo(null, _textFieldController.text);
+    await widget.database.todoDao.insertTodo(newTodo);
+    _textFieldController.clear();
+    _loadTodos();
   }
 
-  void _deleteItem(int index) {
-    setState(() {
-      _todoItems.removeAt(index);
-    });
+  Future<void> _deleteItem(int index) async {
+    final todoToDelete = _todoItems[index];
+    await widget.database.todoDao.deleteTodo(todoToDelete.id!);
+    _loadTodos();
   }
 
   void _showDeleteConfirmationDialog(BuildContext context, int index) {
