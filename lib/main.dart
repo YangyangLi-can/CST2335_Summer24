@@ -1,21 +1,11 @@
-import 'package:cst2335_summer24/model.dart';
 import 'package:flutter/material.dart';
-import 'package:floor/floor.dart';
-import 'dart:async';
 
-// Import the generated database file
-import 'database.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final database = await $FloorAppDatabase.databaseBuilder('app_database.db').build();
-  runApp(TodoApp(database: database));
+void main() {
+  runApp(const TodoApp());
 }
 
 class TodoApp extends StatelessWidget {
-  final AppDatabase database;
-
-  const TodoApp({Key? key, required this.database}) : super(key: key);
+  const TodoApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -24,43 +14,35 @@ class TodoApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: TodoListPage(title: 'Flutter Demo Home Page', database: database),
+      home: const TodoListPage(),
     );
   }
 }
 
-class TodoListPage extends StatefulWidget {
-  final String title;
-  final AppDatabase database;
+class TodoItem {
+  String text;
+  bool isFinished;
 
-  const TodoListPage({Key? key, required this.title, required this.database}) : super(key: key);
+  TodoItem(this.text, this.isFinished);
+}
+
+class TodoListPage extends StatefulWidget {
+  const TodoListPage({Key? key}) : super(key: key);
 
   @override
   State<TodoListPage> createState() => _TodoListPageState();
 }
 
 class _TodoListPageState extends State<TodoListPage> {
-  List<Todo> _todoItems = [];
+  final List<TodoItem> _todoItems = [];
   final TextEditingController _textFieldController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTodos();
-  }
-
-  Future<void> _loadTodos() async {
-    final todos = await widget.database.todoDao.findAllTodos();
-    setState(() {
-      _todoItems = todos;
-    });
-  }
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: const Text('Todo List'),
       ),
       body: Column(
         children: [
@@ -68,11 +50,6 @@ class _TodoListPageState extends State<TodoListPage> {
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
-                ElevatedButton(
-                  onPressed: _addTodoItem,
-                  child: const Text('Add'),
-                ),
-                const SizedBox(width: 8.0),
                 Expanded(
                   child: TextField(
                     controller: _textFieldController,
@@ -81,52 +58,79 @@ class _TodoListPageState extends State<TodoListPage> {
                     ),
                   ),
                 ),
+                ElevatedButton(
+                  onPressed: _addTodoItem,
+                  child: const Text('Add'),
+                ),
               ],
             ),
           ),
           Expanded(
-            child: _todoItems.isEmpty
-                ? const Center(
-              child: Text('There are no items in the list'),
-            )
-                : ListView.builder(
-              itemCount: _todoItems.length,
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  leading: Text('Row number: $index'),
-                  title: Text(_todoItems[index].content),
-                  onLongPress: () {
-                    _showDeleteConfirmationDialog(context, index);
-                  },
-                );
-              },
-            ),
+            child: _buildTodoList(),
+          ),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list),
+            label: 'Current',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.done_all),
+            label: 'Finished',
           ),
         ],
       ),
     );
   }
 
-  Future<void> _addTodoItem() async {
-    final newTodo = Todo(null, _textFieldController.text);
-    await widget.database.todoDao.insertTodo(newTodo);
-    _textFieldController.clear();
-    _loadTodos();
+  Widget _buildTodoList() {
+    final filteredItems = _todoItems.where((item) =>
+    item.isFinished == (_currentIndex == 1)).toList();
+
+    return ListView.builder(
+      itemCount: filteredItems.length,
+      itemBuilder: (context, index) {
+        final item = filteredItems[index];
+        return ListTile(
+          leading: Checkbox(
+            value: item.isFinished,
+            onChanged: (bool? value) {
+              setState(() {
+                item.isFinished = value!;
+              });
+            },
+          ),
+          title: Text(item.text),
+          onLongPress: _currentIndex == 1
+              ? () => _showDeleteDialog(item)
+              : null,
+        );
+      },
+    );
   }
 
-  Future<void> _deleteItem(int index) async {
-    final todoToDelete = _todoItems[index];
-    await widget.database.todoDao.deleteTodo(todoToDelete.id!);
-    _loadTodos();
+  void _addTodoItem() {
+    setState(() {
+      _todoItems.add(TodoItem(_textFieldController.text, false));
+      _textFieldController.clear();
+    });
   }
 
-  void _showDeleteConfirmationDialog(BuildContext context, int index) {
+  void _showDeleteDialog(TodoItem item) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Delete Todo'),
-          content: const Text('Are you sure you want to delete this todo item?'),
+          title: const Text('Delete Item'),
+          content: const Text('Are you sure you want to delete this item?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -136,7 +140,9 @@ class _TodoListPageState extends State<TodoListPage> {
             ),
             TextButton(
               onPressed: () {
-                _deleteItem(index);
+                setState(() {
+                  _todoItems.remove(item);
+                });
                 Navigator.of(context).pop();
               },
               child: const Text('Yes'),
