@@ -20,10 +20,11 @@ class TodoApp extends StatelessWidget {
 }
 
 class TodoItem {
+  String id;
   String text;
   bool isFinished;
 
-  TodoItem(this.text, this.isFinished);
+  TodoItem(this.id, this.text, this.isFinished);
 }
 
 class TodoListPage extends StatefulWidget {
@@ -36,10 +37,13 @@ class TodoListPage extends StatefulWidget {
 class _TodoListPageState extends State<TodoListPage> {
   final List<TodoItem> _todoItems = [];
   final TextEditingController _textFieldController = TextEditingController();
-  int _currentIndex = 0;
+  TodoItem? _selectedItem;
 
   @override
   Widget build(BuildContext context) {
+    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
+    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Todo List'),
@@ -66,25 +70,17 @@ class _TodoListPageState extends State<TodoListPage> {
             ),
           ),
           Expanded(
-            child: _buildTodoList(),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Current',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.done_all),
-            label: 'Finished',
+            child: isLandscape && isTablet
+                ? Row(
+              children: [
+                Expanded(child: _buildTodoList()),
+                if (_selectedItem != null)
+                  Expanded(child: _buildDetailsPage()),
+              ],
+            )
+                : _selectedItem == null
+                ? _buildTodoList()
+                : _buildDetailsPage(),
           ),
         ],
       ),
@@ -92,64 +88,60 @@ class _TodoListPageState extends State<TodoListPage> {
   }
 
   Widget _buildTodoList() {
-    final filteredItems = _todoItems.where((item) =>
-    item.isFinished == (_currentIndex == 1)).toList();
-
     return ListView.builder(
-      itemCount: filteredItems.length,
+      itemCount: _todoItems.length,
       itemBuilder: (context, index) {
-        final item = filteredItems[index];
+        final item = _todoItems[index];
         return ListTile(
-          leading: Checkbox(
-            value: item.isFinished,
-            onChanged: (bool? value) {
-              setState(() {
-                item.isFinished = value!;
-              });
-            },
-          ),
           title: Text(item.text),
-          onLongPress: _currentIndex == 1
-              ? () => _showDeleteDialog(item)
-              : null,
+          onTap: () => setState(() => _selectedItem = item),
         );
       },
+    );
+  }
+
+  Widget _buildDetailsPage() {
+    if (_selectedItem == null) {
+      return const Center(child: Text('No item selected'));
+    }
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Item: ${_selectedItem!.text}'),
+          Text('ID: ${_selectedItem!.id}'),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                _todoItems.remove(_selectedItem);
+                _selectedItem = null;
+              });
+            },
+            child: const Text('Delete'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              setState(() => _selectedItem = null);
+            },
+            child: const Text('Back to List'),
+          ),
+        ],
+      ),
     );
   }
 
   void _addTodoItem() {
-    setState(() {
-      _todoItems.add(TodoItem(_textFieldController.text, false));
-      _textFieldController.clear();
-    });
-  }
-
-  void _showDeleteDialog(TodoItem item) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Item'),
-          content: const Text('Are you sure you want to delete this item?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('No'),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _todoItems.remove(item);
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('Yes'),
-            ),
-          ],
-        );
-      },
-    );
+    if (_textFieldController.text.isNotEmpty) {
+      final newItem = TodoItem(
+        DateTime.now().millisecondsSinceEpoch.toString(),
+        _textFieldController.text,
+        false,
+      );
+      setState(() {
+        _todoItems.add(newItem);
+        _textFieldController.clear();
+      });
+    }
   }
 }
