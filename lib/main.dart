@@ -43,13 +43,13 @@ class _TodoListPageState extends State<TodoListPage> {
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
     final isLandscape = size.width > size.height;
-    final isTablet = size.shortestSide >= 600 && size.width > 720;
+    final isWideEnough = size.width > 600; // Adjusted this condition
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Todo List'),
         actions: [
-          if (_selectedItem != null)
+          if (_selectedItem != null && !isWideEnough)
             IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () => setState(() => _selectedItem = null),
@@ -78,28 +78,32 @@ class _TodoListPageState extends State<TodoListPage> {
             ),
           ),
           Expanded(
-            child: isLandscape && isTablet
-                ? Row(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: _buildTodoList(),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: _selectedItem != null
-                      ? _buildDetailsPage()
-                      : const Center(child: Text('Select an item')),
-                ),
-              ],
-            )
-                : _selectedItem == null
-                ? _buildTodoList()
-                : _buildDetailsPage(),
+            child: _buildContent(isLandscape, isWideEnough),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildContent(bool isLandscape, bool isWideEnough) {
+    if (isLandscape && isWideEnough) {
+      return Row(
+        children: [
+          Expanded(
+            flex: 1,
+            child: _buildTodoList(),
+          ),
+          Expanded(
+            flex: 2,
+            child: _selectedItem != null
+                ? _buildDetailsPage()
+                : const Center(child: Text('Select an item')),
+          ),
+        ],
+      );
+    } else {
+      return _selectedItem == null ? _buildTodoList() : _buildDetailsPage();
+    }
   }
 
   Widget _buildTodoList() {
