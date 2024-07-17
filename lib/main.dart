@@ -41,12 +41,20 @@ class _TodoListPageState extends State<TodoListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isLandscape = MediaQuery.of(context).orientation == Orientation.landscape;
-    final isTablet = MediaQuery.of(context).size.shortestSide >= 600;
+    final size = MediaQuery.of(context).size;
+    final isLandscape = size.width > size.height;
+    final isTablet = size.shortestSide >= 600 && size.width > 720;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Todo List'),
+        actions: [
+          if (_selectedItem != null)
+            IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => setState(() => _selectedItem = null),
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -73,9 +81,16 @@ class _TodoListPageState extends State<TodoListPage> {
             child: isLandscape && isTablet
                 ? Row(
               children: [
-                Expanded(child: _buildTodoList()),
-                if (_selectedItem != null)
-                  Expanded(child: _buildDetailsPage()),
+                Expanded(
+                  flex: 1,
+                  child: _buildTodoList(),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: _selectedItem != null
+                      ? _buildDetailsPage()
+                      : const Center(child: Text('Select an item')),
+                ),
               ],
             )
                 : _selectedItem == null
@@ -111,6 +126,7 @@ class _TodoListPageState extends State<TodoListPage> {
         children: [
           Text('Item: ${_selectedItem!.text}'),
           Text('ID: ${_selectedItem!.id}'),
+          const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () {
               setState(() {
@@ -119,12 +135,6 @@ class _TodoListPageState extends State<TodoListPage> {
               });
             },
             child: const Text('Delete'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() => _selectedItem = null);
-            },
-            child: const Text('Back to List'),
           ),
         ],
       ),
